@@ -20,7 +20,7 @@ func main() {
 	// Jalankan migration setelah koneksi sukses
 	db.RunMigrations(cfg.DatabaseURL)
 
-	r := http.NewRouter()
+	r := http.NewRouterWithDeps(cfg, pool)
 
 	r.Run(":" + cfg.AppPort)
 }

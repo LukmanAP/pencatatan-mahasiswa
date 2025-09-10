@@ -34,12 +34,13 @@ func RunMigrations(databaseURL string) {
 		_, _ = m.Close()
 	}()
 
-	if upErr := m.Up(); upErr != nil && upErr != migrate.ErrNoChange {
+	if err := m.Up(); err != nil {
+		if err == migrate.ErrNoChange {
+			log.Println("migration: no changes")
+			return
+		}
 		log.Fatalf("migration failed: %v", err)
+		return
 	}
-	if err == migrate.ErrNoChange {
-		log.Println("migration: no changes")
-	} else {
-		log.Println("migration: applied successfully")
-	}
+	log.Println("migration: applied successfully")
 }

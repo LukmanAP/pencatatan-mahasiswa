@@ -12,6 +12,7 @@ import (
 type Config struct {
 	AppPort     string
 	DatabaseURL string
+	JWTSecret   string
 }
 
 // buildDatabaseURLFromEnv merakit connection string Postgres dari variabel env terpisah
@@ -58,5 +59,9 @@ func Load() *Config {
 	if urlStr == "" {
 		log.Fatal("DATABASE_URL or DATABASE_* environment variables are required")
 	}
-	return &Config{AppPort: port, DatabaseURL: urlStr}
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+	return &Config{AppPort: port, DatabaseURL: urlStr, JWTSecret: jwtSecret}
 }
