@@ -24,6 +24,7 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 	authHandler := auth.NewHandler(cfg, pool)
 	fakultasHandler := admin.NewHandler(cfg, pool)
 	prodiHandler := admin.NewProdiHandler(cfg, pool)
+	dosenHandler := admin.NewDosenHandler(cfg, pool)
 	v1 := r.Group("/api/v1")
 	{
 		authGroup := v1.Group("/auth")
@@ -58,6 +59,17 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 			prodiGroup.PUT("/:id", prodiHandler.UpdatePut)
 			prodiGroup.PATCH("/:id", prodiHandler.UpdatePatch)
 			prodiGroup.DELETE("/:id", prodiHandler.Delete)
+		}
+
+		// Dosen routes (protected by RequireAuth for admin/operator)
+		dosenGroup := v1.Group("/dosen", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"))
+		{
+			dosenGroup.GET("/", dosenHandler.List)
+			dosenGroup.GET("/:id", dosenHandler.Get)
+			dosenGroup.POST("/", dosenHandler.Create)
+			dosenGroup.PUT("/:id", dosenHandler.UpdatePut)
+			dosenGroup.PATCH("/:id", dosenHandler.UpdatePatch)
+			dosenGroup.DELETE("/:id", dosenHandler.Delete)
 		}
 	}
 
