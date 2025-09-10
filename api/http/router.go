@@ -23,6 +23,7 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 
 	authHandler := auth.NewHandler(cfg, pool)
 	fakultasHandler := admin.NewHandler(cfg, pool)
+	prodiHandler := admin.NewProdiHandler(cfg, pool)
 	v1 := r.Group("/api/v1")
 	{
 		authGroup := v1.Group("/auth")
@@ -46,6 +47,17 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 			fakultasGroup.POST("/", fakultasHandler.Create)
 			fakultasGroup.PUT("/:id", fakultasHandler.Update)
 			fakultasGroup.DELETE("/:id", fakultasHandler.Delete)
+		}
+
+		// Prodi routes (protected by RequireAuth for admin/operator)
+		prodiGroup := v1.Group("/prodi", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"))
+		{
+			prodiGroup.GET("/", prodiHandler.List)
+			prodiGroup.GET("/:id", prodiHandler.Get)
+			prodiGroup.POST("/", prodiHandler.Create)
+			prodiGroup.PUT("/:id", prodiHandler.UpdatePut)
+			prodiGroup.PATCH("/:id", prodiHandler.UpdatePatch)
+			prodiGroup.DELETE("/:id", prodiHandler.Delete)
 		}
 	}
 
