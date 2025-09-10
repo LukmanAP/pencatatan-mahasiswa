@@ -73,8 +73,8 @@ func (s *Service) Register(ctx context.Context, username, password, role string,
 			return nil, ErrInvalidInput
 		}
 		if role == "mahasiswa" {
-			ok, err := s.repo.ExistsMahasiswaByID(ctx, *refID)
-			if err != nil {
+			ok, err1 := s.repo.ExistsMahasiswaByID(ctx, *refID)
+			if err1 != nil {
 				return nil, err
 			}
 			if !ok {
@@ -82,8 +82,8 @@ func (s *Service) Register(ctx context.Context, username, password, role string,
 			}
 		}
 		if role == "dosen" {
-			ok, err := s.repo.ExistsDosenByID(ctx, *refID)
-			if err != nil {
+			ok, err2 := s.repo.ExistsDosenByID(ctx, *refID)
+			if err2 != nil {
 				return nil, err
 			}
 			if !ok {

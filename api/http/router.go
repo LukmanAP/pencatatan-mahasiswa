@@ -8,6 +8,7 @@ import (
 	"pencatatan-data-mahasiswa/internal/config"
 	"pencatatan-data-mahasiswa/internal/db"
 	auth "pencatatan-data-mahasiswa/internal/todo/handler/auth"
+	admin "pencatatan-data-mahasiswa/internal/todo/handler/admin"
 )
 
 type Router struct{}
@@ -21,6 +22,7 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 	})
 
 	authHandler := auth.NewHandler(cfg, pool)
+	fakultasHandler := admin.NewHandler(cfg, pool)
 	v1 := r.Group("/api/v1")
 	{
 		authGroup := v1.Group("/auth")
@@ -34,6 +36,16 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 			mahasiswaGroup.GET("/", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"), func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"message": "protected mahasiswa route"})
 			})
+		}
+
+		// Fakultas routes (protected by RequireAuth for admin/operator)
+		fakultasGroup := v1.Group("/fakultas", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"))
+		{
+			fakultasGroup.GET("/", fakultasHandler.List)
+			fakultasGroup.GET("/:id", fakultasHandler.Get)
+			fakultasGroup.POST("/", fakultasHandler.Create)
+			fakultasGroup.PUT("/:id", fakultasHandler.Update)
+			fakultasGroup.DELETE("/:id", fakultasHandler.Delete)
 		}
 	}
 
