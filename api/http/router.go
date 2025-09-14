@@ -7,8 +7,8 @@ import (
 
 	"pencatatan-data-mahasiswa/internal/config"
 	"pencatatan-data-mahasiswa/internal/db"
-	auth "pencatatan-data-mahasiswa/internal/todo/handler/auth"
 	admin "pencatatan-data-mahasiswa/internal/todo/handler/admin"
+	auth "pencatatan-data-mahasiswa/internal/todo/handler/auth"
 )
 
 type Router struct{}
@@ -25,6 +25,8 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 	fakultasHandler := admin.NewHandler(cfg, pool)
 	prodiHandler := admin.NewProdiHandler(cfg, pool)
 	dosenHandler := admin.NewDosenHandler(cfg, pool)
+	mahasiswaHandler := admin.NewMahasiswaHandler(cfg, pool)
+	semesterHandler := admin.NewSemesterHandler(cfg, pool)
 	v1 := r.Group("/api/v1")
 	{
 		authGroup := v1.Group("/auth")
@@ -33,11 +35,29 @@ func NewRouterWithDeps(cfg *config.Config, pool *db.Pool) *gin.Engine {
 			authGroup.POST("/register", authHandler.Register)
 		}
 
-		mahasiswaGroup := v1.Group("/mahasiswa")
+		// Semester routes
+		semesterReadGroup := v1.Group("/semester", auth.RequireAuth(cfg.JWTSecret, "admin", "operator", "dosen", "mahasiswa"))
 		{
-			mahasiswaGroup.GET("/", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"), func(c *gin.Context) {
-				c.JSON(http.StatusOK, gin.H{"message": "protected mahasiswa route"})
-			})
+			semesterReadGroup.GET("/", semesterHandler.List)
+			semesterReadGroup.GET("/:id", semesterHandler.Get)
+		}
+		semesterWriteGroup := v1.Group("/semester", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"))
+		{
+			semesterWriteGroup.POST("/", semesterHandler.Create)
+			semesterWriteGroup.PUT("/:id", semesterHandler.UpdatePut)
+			semesterWriteGroup.PATCH("/:id", semesterHandler.UpdatePatch)
+			semesterWriteGroup.DELETE("/:id", semesterHandler.Delete)
+			semesterWriteGroup.POST("/import", semesterHandler.ImportCSV)
+		}
+
+		mahasiswaGroup := v1.Group("/mahasiswa", auth.RequireAuth(cfg.JWTSecret, "admin", "operator"))
+		{
+			mahasiswaGroup.GET("/", mahasiswaHandler.List)
+			mahasiswaGroup.GET("/:id", mahasiswaHandler.Get)
+			mahasiswaGroup.POST("/", mahasiswaHandler.Create)
+			mahasiswaGroup.PUT("/:id", mahasiswaHandler.UpdatePut)
+			mahasiswaGroup.PATCH("/:id", mahasiswaHandler.UpdatePatch)
+			mahasiswaGroup.DELETE("/:id", mahasiswaHandler.Delete)
 		}
 
 		// Fakultas routes (protected by RequireAuth for admin/operator)
